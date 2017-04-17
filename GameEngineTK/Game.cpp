@@ -4,12 +4,27 @@
 
 #include "pch.h"
 #include "Game.h"
+#include <PrimitiveBatch.h>
+#include <VertexTypes.h>
+#include <Effects.h>
+#include <CommonStates.h>
+#include <SimpleMath.h>
+
+
 
 extern void ExitGame();
 
 using namespace DirectX;
 
+using namespace DirectX::SimpleMath;
+
 using Microsoft::WRL::ComPtr;
+
+
+std::unique_ptr<PrimitiveBatch<VertexPositionColor>> primitiveBatch;
+
+std::unique_ptr<BasicEffect> basicEffect;//べーシックエフェクト型ユニークポインタの宣言
+ComPtr<ID3D11InputLayout> inputLayout;//インプットレイアウト変数の宣言
 
 Game::Game() :
     m_window(0),
@@ -36,6 +51,34 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
+
+
+	//初期化はここに書く
+	
+	primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionColor>>(m_d3dContext.Get());//.Getで中のポインタを参照
+
+
+	
+
+	basicEffect = std::make_unique<BasicEffect>(m_d3dDevice.Get());//.Getで中のポインタを参照
+
+	//セットプロジェクション行列の作成
+	basicEffect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
+	m_outputWidth, m_outputHeight, 0, 0, 1));
+	basicEffect->SetVertexColorEnabled(true);
+
+	void const* shaderByteCode;
+	size_t byteCodeLength;
+
+	basicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+
+	m_d3dDevice->CreateInputLayout(VertexPositionColor::InputElements,
+		VertexPositionColor::InputElementCount,
+		shaderByteCode, byteCodeLength,
+		inputLayout.GetAddressOf());
+
+
+
 }
 
 // Executes the basic game loop.
@@ -56,6 +99,8 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+	//毎フレーム処理を書く
+
 }
 
 // Draws the scene.
@@ -67,11 +112,30 @@ void Game::Render()
         return;
     }
 
-    Clear();
+    Clear();//キャンバスの初期化
 
     // TODO: Add your rendering code here.
+	//描画処理はここに書く
 
-    Present();
+	CommonStates states(m_d3dDevice.Get());
+	m_d3dContext->OMSetBlendState(states.Opaque(), nullptr, 0xFFFFFFFF);//透明度
+	m_d3dContext->OMSetDepthStencilState(states.DepthNone(), 0);//深度バッファの設定
+	m_d3dContext->RSSetState(states.CullNone());//表裏関係なく描画
+
+	basicEffect->Apply(m_d3dContext.Get());
+	m_d3dContext->IASetInputLayout(inputLayout.Get());
+
+	primitiveBatch->Begin();//設定
+	primitiveBatch->DrawLine(
+		VertexPositionColor(Vector3(0,0,0),Color(1,0,0)), 
+		VertexPositionColor(Vector3(800, 600, 0), Color(0, 0, 1))
+	);
+	primitiveBatch->End();//纏めて描画
+
+
+
+
+    Present();//画面に反映させる
 }
 
 // Helper method to clear the back buffers.
