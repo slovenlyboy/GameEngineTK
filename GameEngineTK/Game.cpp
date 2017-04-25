@@ -56,7 +56,7 @@ void Game::Initialize(HWND window, int width, int height)
 
 	//セットプロジェクション行列の作成
 	m_effect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
-	m_outputWidth, m_outputHeight, 0, 0, 1));
+	m_outputWidth, m_outputHeight, 0.0f, 0.0f, 1.0f));
 	m_effect->SetVertexColorEnabled(true);
 
 	void const* shaderByteCode;
@@ -76,6 +76,18 @@ void Game::Initialize(HWND window, int width, int height)
 
 	//デバッグカメラ生成
 	m_debugCamera = std::make_unique<DebugCamera>(m_outputWidth,m_outputHeight);
+
+
+
+	//エフェクトファクトリー生成
+	m_factory = std::make_unique<EffectFactory>(m_d3dDevice.Get());
+	//テクスチャのパス指定
+	m_factory->SetDirectory(L"Resources");
+	//モデルの生成
+	m_modelSkyDome = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources/SkyDome.cmo", *m_factory);
+
+	m_modelGround = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources/ground1m.cmo", *m_factory);
+
 }
 
 // Executes the basic game loop.
@@ -109,18 +121,13 @@ void Game::Render()
 		2,1,3
 	};
 
-
 	VertexPositionNormal vertices[] =
 	{
-
 		{Vector3(-1.0f,+1.0f,0.0f),Vector3(0.0f,0.0f,1.0f)},
-		{ Vector3(-1.0f,-1.0f,0.0f),Vector3(0.0f,0.0f,1.0f) },
-		{ Vector3(+1,+1,0),Vector3(0,0,1) },
-		{ Vector3(+1,-1,0),Vector3(0,0,1) },
+		{Vector3(-1.0f,-1.0f,0.0f),Vector3(0.0f,0.0f,1.0f)},
+		{Vector3(+1,+1,0),Vector3(0,0,1)},
+		{Vector3(+1,-1,0),Vector3(0,0,1)},
 	};
-
-
-
 
     // Don't try to render anything before the first Update.
     if (m_timer.GetFrameCount() == 0)
@@ -141,27 +148,23 @@ void Game::Render()
 	//	Vector3::Zero, //カメラが何処向いているか　
 	//	Vector3::UnitY);//上方向ベクトル
 
-
 	m_view = m_debugCamera->GetCameraMatrix();//デバッグカメラからビュー行列を取得
-
-
 
 	//プロジェクション行列設定
 	m_proj = Matrix::CreatePerspectiveFieldOfView(XM_PI / 4.f,//視野角（↕方向）
 		float(m_outputWidth) / float(m_outputHeight), //アスペクト比
 		0.1f,//ニアクリップ
-		10.f);//ファークリップ
+		500.f);//ファークリップ
 
 	m_effect->SetView(m_view);
 	m_effect->SetProjection(m_proj);
-
-
-
 	m_effect->Apply(m_d3dContext.Get());
 	m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
+	//モデルの描画
+	m_modelSkyDome->Draw(m_d3dContext.Get(), *m_states, m_world, m_view, m_proj);
+	m_modelGround->Draw(m_d3dContext.Get(),*m_states,m_world,m_view,m_proj);
 	m_batch->Begin();//設定
-
 	m_batch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
 
 
@@ -174,13 +177,11 @@ void Game::Render()
 	VertexPositionNormal v2(Vector3(0.5f, -0.5f, 0.5f), Colors::Yellow);
 	VertexPositionNormal v3(Vector3(-0.5f, -0.5f, 0.5f), Colors::Green);
 
-
 	/*VertexPositionColor v1(Vector3(400.f, 150.f, 0.f), Colors::Yellow);
 	VertexPositionColor v2(Vector3(600.f, 450.f, 0.f), Colors::Yellow);
 	VertexPositionColor v3(Vector3(200.f, 450.f, 0.f), Colors::Yellow);*/
 
 	m_batch->DrawTriangle(v1,v2,v3);
-
 
 	m_batch->End();//纏めて描画
 
