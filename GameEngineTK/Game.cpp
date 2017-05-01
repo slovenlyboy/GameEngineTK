@@ -46,11 +46,11 @@ void Game::Initialize(HWND window, int width, int height)
 
 
 	//初期化はここに書く
+
 	
+
+
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());//.Getで中のポインタを参照
-
-
-	
 
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());//.Getで中のポインタを参照
 
@@ -88,6 +88,8 @@ void Game::Initialize(HWND window, int width, int height)
 
 	m_modelGround = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources/ground1m.cmo", *m_factory);
 
+	m_modelBall = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources/skyball.cmo", *m_factory);
+
 }
 
 // Executes the basic game loop.
@@ -104,12 +106,76 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
-    float elapsedTime = float(timer.GetElapsedSeconds());
+	float elapsedTime = float(timer.GetElapsedSeconds());
 
-    // TODO: Add your game logic here.
-    elapsedTime;
+	// TODO: Add your game logic here.
+	elapsedTime;
 	//毎フレーム処理を書く
 	m_debugCamera->Update();
+
+
+
+	//ワールド行列計算
+	Matrix scalemat;
+
+	m_angle++;
+	//ワールド行列合成(SRT)
+	for (int i = 0; i < 21; i++)
+	{
+		Matrix transmat;
+
+		Matrix rotmatZ;
+
+		scalemat = Matrix::CreateScale(1.0f);//スケーリング
+
+		if (i <= 9)
+		{
+			transmat = Matrix::CreateTranslation(20.0f, 0.0f, 0.0f);//平行移動
+			rotmatZ = Matrix::CreateRotationZ(XMConvertToRadians(36.0f*i + m_angle));//ロール
+		}
+		else
+		{
+			transmat = Matrix::CreateTranslation(30.0f, 0.0f, 0.0f);//平行移動
+			rotmatZ = Matrix::CreateRotationZ(XMConvertToRadians(36.0f*i - m_angle));//ロール
+		}
+		if (i == 20)
+		{
+			transmat = Matrix::CreateTranslation(0.0f, 0.0f, 0.0f);//平行移動
+			scalemat = Matrix::CreateScale(2.5f);//スケーリング
+			rotmatZ = Matrix::CreateRotationZ(-m_angle / 60);//ロール
+		}
+
+		//回転		
+		Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(270.0f));//ピッチ（仰角）
+		Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(0.0f));//ヨー（方位角）
+		//回転行列の合成
+		Matrix rotmat = rotmatZ*rotmatX*rotmatY;
+
+		m_worldBall[i] = scalemat*transmat*rotmat;
+	}
+
+
+
+	for (int i = 0; i < 40000; i++)
+	{
+
+		Matrix transmat = Matrix::CreateTranslation(i % 200-100,0.0f,i/200-100);
+
+		Matrix rotmatZ;
+
+		scalemat = Matrix::CreateScale(1.0f);//スケーリング
+
+		Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(0.0f));//ピッチ（仰角）
+		Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(0.0f));//ヨー（方位角）
+
+
+		Matrix rotmat = rotmatZ*rotmatX*rotmatY;
+
+		m_worldGround[i] = scalemat*rotmat*transmat;
+	}
+
+	
+
 }
 
 // Draws the scene.
@@ -163,9 +229,26 @@ void Game::Render()
 
 	//モデルの描画
 	m_modelSkyDome->Draw(m_d3dContext.Get(), *m_states, m_world, m_view, m_proj);
-	m_modelGround->Draw(m_d3dContext.Get(),*m_states,m_world,m_view,m_proj);
+	//
+
+
+
+	for (int i = 0; i < 40000; i++)
+	{
+		m_modelGround->Draw(m_d3dContext.Get(), *m_states, m_worldGround[i], m_view, m_proj);
+	}
+
+	for (int i = 0; i < 21; i++)
+	{
+		m_modelBall->Draw(m_d3dContext.Get(), *m_states, m_worldBall[i], m_view, m_proj);
+	}
+
+
 	m_batch->Begin();//設定
-	m_batch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
+
+
+	//三角形の描画
+	/*m_batch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);*/
 
 
 	/*m_batch->DrawLine(
@@ -173,15 +256,15 @@ void Game::Render()
 		VertexPositionColor(Vector3(800, 600, 0), Color(0, 0, 1))
 	);*/
 
-	VertexPositionNormal v1(Vector3(0.f, 0.5f, 0.5f), Colors::Red);
+	/*VertexPositionNormal v1(Vector3(0.f, 0.5f, 0.5f), Colors::Red);
 	VertexPositionNormal v2(Vector3(0.5f, -0.5f, 0.5f), Colors::Yellow);
-	VertexPositionNormal v3(Vector3(-0.5f, -0.5f, 0.5f), Colors::Green);
+	VertexPositionNormal v3(Vector3(-0.5f, -0.5f, 0.5f), Colors::Green);*/
 
 	/*VertexPositionColor v1(Vector3(400.f, 150.f, 0.f), Colors::Yellow);
 	VertexPositionColor v2(Vector3(600.f, 450.f, 0.f), Colors::Yellow);
 	VertexPositionColor v3(Vector3(200.f, 450.f, 0.f), Colors::Yellow);*/
 
-	m_batch->DrawTriangle(v1,v2,v3);
+	/*m_batch->DrawTriangle(v1,v2,v3);*/
 
 	m_batch->End();//纏めて描画
 

@@ -97,4 +97,15 @@ private:
 	//地面
 	std::unique_ptr<DirectX::Model>m_modelGround;
 
+	//球モデル
+	std::unique_ptr<DirectX::Model>m_modelBall;
+
+
+	//球のワールド行列
+	DirectX::SimpleMath::Matrix m_worldBall[21];
+	DirectX::SimpleMath::Matrix m_worldGround[40000];
+
+
+
+	float m_angle = 0;
 };
