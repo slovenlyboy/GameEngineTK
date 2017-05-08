@@ -12,6 +12,7 @@
 #include <SimpleMath.h>
 #include <Model.h>
 #include "DebugCamera.h"
+#include <Keyboard.h>
 
 
 // A basic game implementation that creates a D3D11 device and
@@ -100,12 +101,44 @@ private:
 	//球モデル
 	std::unique_ptr<DirectX::Model>m_modelBall;
 
+	//球モデル
+	std::unique_ptr<DirectX::Model>m_modelTeaPod;
+
+	std::unique_ptr<DirectX::Model>m_modelHead;
+
 
 	//球のワールド行列
 	DirectX::SimpleMath::Matrix m_worldBall[21];
-	DirectX::SimpleMath::Matrix m_worldGround[40000];
+
+	DirectX::SimpleMath::Matrix m_worldTeaPod[20];
+
+	DirectX::SimpleMath::Matrix m_worldGround;
 
 
+	DirectX::SimpleMath::Matrix m_worldHead;
+
+
+	std::unique_ptr<DirectX::Keyboard> keyboard;
 
 	float m_angle = 0;
+
+	float m_scele = 1.0f;
+
+	int m_sFlag = 0;
+
+	int m_time = 60;
+
+	float m_pos = 1.0f;
+
+
+	float anngle[20];
+
+	float lenge[20];
+
+
+
+	DirectX::SimpleMath::Vector3 head_Pos;
+
+
+	float spin = 0.0f;
 };
