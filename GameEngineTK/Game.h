@@ -13,6 +13,7 @@
 #include <Model.h>
 #include "DebugCamera.h"
 #include <Keyboard.h>
+#include "FollwCamera.h"
 
 
 // A basic game implementation that creates a D3D11 device and
@@ -141,4 +142,9 @@ private:
 
 
 	float spin = 0.0f;
+
+
+	//ƒJƒƒ‰
+	std::unique_ptr<FollwCamera>m_Camera;
+
 };

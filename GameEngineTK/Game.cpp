@@ -51,6 +51,10 @@ void Game::Initialize(HWND window, int width, int height)
 	//初期化はここに書く
 
 	srand((unsigned int)time(NULL));
+	//カメラ生成
+	m_Camera = std::make_unique<FollwCamera>(m_outputWidth, m_outputHeight);
+
+	head_Pos = Vector3(0, 0, 30);
 
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());//.Getで中のポインタを参照
 
@@ -97,16 +101,8 @@ void Game::Initialize(HWND window, int width, int height)
 	m_modelHead = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources/head.cmo", *m_factory);
 
 
-
-
-	for (int i = 0; i < 20; i++)
-	{
-
-		anngle[i] = rand() % 200-100;
-
-		lenge[i] = rand() % 100;
-
-	}
+	//カメラにキーボードをセット
+	m_Camera->setKeyboard(keyboard.get());
 
 }
 
@@ -129,233 +125,91 @@ void Game::Update(DX::StepTimer const& timer)
 	// TODO: Add your game logic here.
 	elapsedTime;
 	//毎フレーム処理を書く
-	m_debugCamera->Update();
 
 
+
+	//ワールド行列合成(SRT)
+	//	Matrix transmat;
+	//	scalemat = Matrix::CreateScale(1.0f);//スケーリング
+	//		transmat = Matrix::CreateTranslation(0.0f, 0.0f, 0.0f);//平行移動
+	//		scalemat = Matrix::CreateScale(2.5f);//スケーリング
+	//	//回転		
+	//	Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(270.0f));//ピッチ（仰角）
+	//	Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(0.0f));//ヨー（方位角）
+	//  Matrix rotmatZ = Matrix::CreateRotationZ(-m_angle / 60);//ロール
+	//	//回転行列の合成
+	//	Matrix rotmat = rotmatZ*rotmatX*rotmatY;
+	//	m_worldBall = scalemat*transmat*rotmat;
+	//}
+
+
+
+	//自機のワールド行列を計算
 
 	//ワールド行列計算
 	Matrix scalemat;
 
-	m_angle++;
-
-	
-
-	
-
-	if (m_pos > 0.0f)
-	{
-			m_pos -= 0.002f;
-	}
-	else
-	{
-			m_pos = 0.0f;
-	}
-
-		
-
-	switch (m_sFlag)
-	{
-	case 0:
-		m_scele+= 0.05f;
-		break;
-
-	case 1:
-		m_scele-= 0.05f;
-		break;
-
-	}
-
-
-	if (m_scele >= 5.0f)
-	{
-		m_sFlag = 1;
-	}
-
-	if (m_scele <= 1.0f)
-	{
-		m_sFlag = 0;
-	}
-
-	//ワールド行列合成(SRT)
-	//for (int i = 0; i < 21; i++)
-	//{
-	//	Matrix transmat;
-
-	//	Matrix rotmatZ;
-
-	//	scalemat = Matrix::CreateScale(1.0f);//スケーリング
-
-	//	if (i <= 9)
-	//	{
-	//		transmat = Matrix::CreateTranslation(20.0f, 0.0f, 0.0f);//平行移動
-	//		rotmatZ = Matrix::CreateRotationZ(XMConvertToRadians(36.0f*i + m_angle));//ロール
-	//	}
-	//	else
-	//	{
-	//		transmat = Matrix::CreateTranslation(30.0f, 0.0f, 0.0f);//平行移動
-	//		rotmatZ = Matrix::CreateRotationZ(XMConvertToRadians(36.0f*i - m_angle));//ロール
-	//	}
-	//	if (i == 20)
-	//	{
-	//		transmat = Matrix::CreateTranslation(0.0f, 0.0f, 0.0f);//平行移動
-	//		scalemat = Matrix::CreateScale(2.5f);//スケーリング
-	//		rotmatZ = Matrix::CreateRotationZ(-m_angle / 60);//ロール
-	//	}
-
-	//	//回転		
-	//	Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(270.0f));//ピッチ（仰角）
-	//	Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(0.0f));//ヨー（方位角）
-	//	//回転行列の合成
-	//	Matrix rotmat = rotmatZ*rotmatX*rotmatY;
-
-	//	m_worldBall[i] = scalemat*transmat*rotmat;
-	//}
-
-	
-
-
-	//for (int i = 0; i < 20; i++)
-	//{
-
-
-
-	//	Matrix transmat;
-
-	//	Matrix rotmatZ;
-
-	//	scalemat = Matrix::CreateScale(m_scele);//スケーリング
-
-	//	transmat = Matrix::CreateTranslation((cosf(anngle[i])*lenge[i])*m_pos, 0.0f, (sinf(anngle[i])*lenge[i])*m_pos);//平行移動
-
-	//	
-	//	rotmatZ = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));//ロール
-
-	//	//(0~XM_2PI)(0~100)cosf(anngle[i])*lenge[i])sinf(anngle[i])*lenge[i])
-	//	//回転		
-	//	Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(0.0f));//ピッチ（仰角）
-	//	Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(m_angle));//ヨー（方位角）
-	//																	   //回転行列の合成
-	//	Matrix rotmat = rotmatZ*rotmatX*rotmatY;
-
-	//	m_worldTeaPod[i] = scalemat*rotmat*transmat;
-	//}
-
-
-
-	//for (int i = 0; i < 40000; i++)
-	//{
-
-	//	Matrix transmat = Matrix::CreateTranslation(i % 200-100,0.0f,i/200-100);
-
-	//	Matrix rotmatZ;
-
-	//	scalemat = Matrix::CreateScale(1.0f);//スケーリング
-
-	//	Matrix rotmatX = Matrix::CreateRotationX(XMConvertToRadians(0.0f));//ピッチ（仰角）
-	//	Matrix rotmatY = Matrix::CreateRotationY(XMConvertToRadians(0.0f));//ヨー（方位角）
-
-
-	//	Matrix rotmat = rotmatZ*rotmatX*rotmatY;
-
-	//	m_worldGround[i] = scalemat*rotmat*transmat;
-	//}
-
-
-
-	//時期のワールド行列を計算
-
-
 	Matrix transmat = Matrix::CreateTranslation(head_Pos);//平行移動
 
 
-	Matrix rotmat = Matrix::CreateRotationY(XMConvertToRadians(spin));//ヨー（方位角）
+	Matrix rotmat = Matrix::CreateRotationY(XMConvertToRadians(0.0f) + spin);//ヨー（方位角）
 
+	scalemat = Matrix::CreateScale(0.2f);//スケーリング;
 
-
-	m_worldHead = rotmat*transmat;
-
-	   
-
-
-
-	Keyboard::State key = keyboard->GetState();
 	
-
+	m_worldHead = scalemat*rotmat*transmat;
+	   
+		Keyboard::State key = keyboard->GetState();
+	
+		//左右操作
 		if (key.A)
 		{
 
-			float moveS = 0.5f;
-
+			float moveS = 0.05f;
 			spin += moveS;
 
 		}
 		else if (key.D)
 		{
-
-			float moveS = -0.5f;
-
+			float moveS = -0.05f;
 			spin += moveS;
 
 		}
 
-
+		//上下操作
 		if (key.W)
 		{
 
 			Vector3 moveV(0, 0, -0.1f);
-
-
 			moveV = SimpleMath::Vector3::TransformNormal(moveV, rotmat);
-
 			head_Pos += moveV;
 
 		}
 		else if (key.S)
 		{
-
 			Vector3 moveV(0, 0, +0.1f);
-
-
 			moveV = SimpleMath::Vector3::TransformNormal(moveV, rotmat);
-
 			head_Pos += moveV;
-
 		}
 		
 
 
 
-
 		
+		//カメラの更新処理
+		m_Camera->setTargetPos(head_Pos);
+		m_Camera->setTargetAngele(spin);
 
-
-		
-
-
-		
-
-
-		
-		
+		m_Camera->Updates();
+		m_view = m_Camera->GetView();
+		m_proj = m_Camera->GetProj();
 
 }
 
 // Draws the scene.
 void Game::Render()
 {
-	uint16_t indices[] =
-	{
-		0,1,2,
-		2,1,3
-	};
-
-	VertexPositionNormal vertices[] =
-	{
-		{Vector3(-1.0f,+1.0f,0.0f),Vector3(0.0f,0.0f,1.0f)},
-		{Vector3(-1.0f,-1.0f,0.0f),Vector3(0.0f,0.0f,1.0f)},
-		{Vector3(+1,+1,0),Vector3(0,0,1)},
-		{Vector3(+1,-1,0),Vector3(0,0,1)},
-	};
+	
 
     // Don't try to render anything before the first Update.
     if (m_timer.GetFrameCount() == 0)
@@ -371,18 +225,7 @@ void Game::Render()
 	m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);//透明度
 	m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);//深度バッファの設定
 	m_d3dContext->RSSetState(m_states->CullClockwise());//表裏関係なく描画
-  /*  ビュー行列設定*/
-	//m_view = Matrix::CreateLookAt(Vector3(0.0f, 200.0f,2.0f),//カメラ視点
-	//	Vector3::Zero, //カメラが何処向いているか　
-	//	Vector3::UnitY);//上方向ベクトル
-
-	m_view = m_debugCamera->GetCameraMatrix();//デバッグカメラからビュー行列を取得
-
-	//プロジェクション行列設定
-	m_proj = Matrix::CreatePerspectiveFieldOfView(XM_PI /4.0f,//視野角（↕方向）
-		float(m_outputWidth) / float(m_outputHeight), //アスペクト比
-		0.1f,//ニアクリップ
-		500.f);//ファークリップ
+ 
 
 	m_effect->SetView(m_view);
 	m_effect->SetProjection(m_proj);
@@ -400,23 +243,9 @@ void Game::Render()
 
 
 
-	/*for (int i = 0; i < 21; i++)
-	{
-		m_modelBall->Draw(m_d3dContext.Get(), *m_states, m_worldBall[i], m_view, m_proj);
-	}*/
-
-
-
-	/*for (int i = 0; i < 20; i++)
-	{
-		m_modelTeaPod->Draw(m_d3dContext.Get(), *m_states, m_worldTeaPod[i], m_view, m_proj);
-	}*/
-
-
 	m_batch->Begin();//設定
 
 
-	
 
 	m_batch->End();//纏めて描画
 
