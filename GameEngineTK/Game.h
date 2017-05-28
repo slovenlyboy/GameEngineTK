@@ -14,6 +14,9 @@
 #include "DebugCamera.h"
 #include <Keyboard.h>
 #include "FollwCamera.h"
+#include "Obj3d.h"
+
+
 
 
 // A basic game implementation that creates a D3D11 device and
@@ -21,6 +24,20 @@
 class Game
 {
 public:
+	enum  PLAYER_PARTS
+	{
+		//パーツ分登録
+		HEAD,
+		BODY,
+		UNDER,
+		TIRE_R,
+		TIRE_L,
+
+
+		PLAYER_PARTS_NUM
+
+	};
+
 
     Game();
 
@@ -84,6 +101,11 @@ private:
 	DirectX::SimpleMath::Matrix m_view;//ビュー行列
 	DirectX::SimpleMath::Matrix m_proj;//プロジェクション行列
 
+	//自機の親パーツ
+	std::vector<Obj3d> m_ObjPlayer;
+
+	//自機の子パーツ
+	Obj3d m_ObjPlayer2;
 
 
 	//デバッグカメラ
@@ -94,18 +116,14 @@ private:
 	
 
 	//天球
-	std::unique_ptr<DirectX::Model>m_modelSkyDome;
-
+	Obj3d m_objSkydome;
 	//地面
 	std::unique_ptr<DirectX::Model>m_modelGround;
 
-	//球モデル
-	std::unique_ptr<DirectX::Model>m_modelBall;
+	
 
-	//球モデル
-	std::unique_ptr<DirectX::Model>m_modelTeaPod;
+	/*std::unique_ptr<DirectX::Model>m_modelHead;*/
 
-	std::unique_ptr<DirectX::Model>m_modelHead;
 
 
 	//球のワールド行列
@@ -117,6 +135,8 @@ private:
 
 
 	DirectX::SimpleMath::Matrix m_worldHead;
+
+	DirectX::SimpleMath::Matrix m_worldHead2;
 
 
 	std::unique_ptr<DirectX::Keyboard> keyboard;
